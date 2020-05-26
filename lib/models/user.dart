@@ -1,15 +1,19 @@
 
+import 'dart:async';
+
+import 'package:easychat/models/message.dart';
+
 class User {
   String nickname;
   int port;
-  List<String> messages = [];
-  List<String> readedMessages = [];
+  List<Message> messages = [];
+  StreamController<void> updater = StreamController<void>.broadcast();
 
-  User({this.nickname, this.port});
+  User({this.nickname, this.port = 8080});
 
-  addMessage(String message){
+  addMessage(Message message){
     messages.add(message);
-    readedMessages.add(message);
+    updater.add(null);
   }
 
   factory User.fromJson(Map<String, dynamic> json) {

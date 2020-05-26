@@ -1,3 +1,5 @@
+import 'package:easychat/models/user.dart';
+import 'package:easychat/services/shared.dart';
 import 'package:flutter/material.dart';
 
 class RouteService{
@@ -9,12 +11,12 @@ class RouteService{
 
   static void add(String routeName){
     history.add(routeName);
-    //print(history);
+    print(['add',routeName, history]);
   }
 
-  static void remove(String pageName) {
-    history.remove(pageName);
-    //print(history);
+  static void remove(String routeName) {
+    history.remove(routeName);
+    print(['remove',routeName, history]);
   }
 
 }
@@ -31,6 +33,7 @@ class RouteController extends StatefulWidget {
 }
 
 class _RouteControllerState extends State<RouteController> {
+  List<User> users = [];
   @override
   void initState() {
     RouteService.add(widget.routeName);
@@ -46,6 +49,33 @@ class _RouteControllerState extends State<RouteController> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return widget.child;
+    return Scaffold(
+      body: Stack(
+        alignment: Alignment.topLeft,
+        fit: StackFit.expand,
+        children:[
+          widget.child ?? Text(widget.routeName),
+          Positioned(
+            bottom: 10,
+            right: 10,
+            child: StreamBuilder<List<User>>(
+              stream: Shared.onlineUsers.stream,
+              initialData: [],
+              builder: (context, snapshot){
+                if(snapshot.hasData){
+                  print(snapshot.data);
+                  users = snapshot.data;
+                }
+                return Column(
+                  children: users.isNotEmpty ? users.map((e) {
+                    return Text(e.nickname);
+                  }).toList() : []
+                );
+              },
+            ),
+          )
+        ]
+      ),
+    );
   }
 }

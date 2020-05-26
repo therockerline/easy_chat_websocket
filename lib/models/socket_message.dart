@@ -27,7 +27,7 @@ class SocketMessage {
 
   factory SocketMessage.fromUserUpdateJson(Map<String, dynamic> json){
     List<User> users = (json['userCollection'] as List).map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
-    print(users);
+    //print(users);
     return SocketMessage(
         type: json['type'],
         userCollection: users
