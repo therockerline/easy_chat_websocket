@@ -1,32 +1,34 @@
 
 import 'dart:async';
-
+import 'dart:convert';
+import 'package:easychat/constants.dart';
 import 'package:easychat/models/message.dart';
+import 'package:easychat/services/storage_service.dart';
 
 class User {
   String nickname;
-  int port;
   List<Message> messages = [];
   StreamController<void> updater = StreamController<void>.broadcast();
 
-  User({this.nickname, this.port = 8080});
+  User({this.nickname});
 
-  addMessage(Message message){
+  addMessage(Message message) async {
     messages.add(message);
+    List<Map<String,dynamic>> jsonMess =  messages.map((e) => e.toJson()).toList();
+    print(jsonMess);
+    await Storage(Constants.boxMessagesSuffix+nickname).set(jsonMess);
     updater.add(null);
   }
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       nickname: json['nickname'],
-      port: json['port'],
     );
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['nickname'] = this.nickname;
-    data['port'] = this.port;
     return data;
   }
 }

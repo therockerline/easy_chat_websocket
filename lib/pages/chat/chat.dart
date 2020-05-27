@@ -1,11 +1,12 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 
+import 'package:easychat/constants.dart';
 import 'package:easychat/models/message.dart';
 import 'package:easychat/models/user.dart';
 import 'package:easychat/services/shared.dart';
+import 'package:easychat/services/storage_service.dart';
 import 'package:easychat/services/web_socket_service.dart';
 import 'package:flutter/material.dart';
 
@@ -23,6 +24,7 @@ class _ChatState extends State<Chat> {
   ScrollController _scrollController = ScrollController();
   StreamSubscription stream = null;
   User user;
+
   @override
   void initState() {
     user = Shared.targetUser;
@@ -84,15 +86,10 @@ class _ChatState extends State<Chat> {
 
   void _sendMessage() {
     if (_controller.text.isNotEmpty) {
-      var mess = {
-        'type':'message',
-        'target':user,
-        'message':_controller.text
-      };
       setState(() {
         user.addMessage(Message(message: _controller.text, type: MessageType.sended));
       });
-      WebSocketService.send(jsonEncode(mess));
+      WebSocketService.send(user, _controller.text);
     }
   }
 

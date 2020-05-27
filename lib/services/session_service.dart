@@ -6,8 +6,8 @@ import '../constants.dart';
 
 class SessionService{
   static Future<void> init() async{
-    String nickname = await Storage<String>(Constants.userIdBox).get();
+    String nickname = await Storage(Constants.boxUserId).get();
     print(['user:',nickname]);
-    Shared.currentUser = nickname!=null?User(nickname: nickname, port: 8080): null;
+    Shared.currentUser = nickname!=null?User(nickname: nickname): null;
   }
 }

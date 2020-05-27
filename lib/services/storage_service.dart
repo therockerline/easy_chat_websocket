@@ -1,6 +1,6 @@
 import 'package:localstorage/localstorage.dart';
 
-class Storage<E>{
+class Storage{
   static LocalStorage _storage;
 
   final String boxName;
@@ -9,17 +9,15 @@ class Storage<E>{
     _storage = LocalStorage('scrappy_storage');
   }
 
-  Future<E> get() async {
+  Future<dynamic> get() async {
     if(!await _storage.ready) throw('impossibile connettersi al DB');
-    E item = await _storage.getItem(boxName) as E;
-    print([boxName,item]);
+    dynamic item = await _storage.getItem(boxName);
     return item;
   }
 
-  Future<void> set(E value) async {
+  Future<void> set(dynamic value) async {
     if(!await _storage.ready) throw('impossibile connettersi al DB');
     await _storage.setItem(boxName, value);
-
   }
 
 }

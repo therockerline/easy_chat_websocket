@@ -63,10 +63,16 @@ class _LoginState extends State<Login> {
 
   Future<void> login() async {
     if(_controller.text.isNotEmpty) {
-      await Storage<String>(Constants.userIdBox).set(_controller.text);
+      await Storage(Constants.boxUserId).set(_controller.text);
       await SessionService.init();
-      WebSocketService.login(Shared.currentUser);
-      Navigator.of(context).pushReplacementNamed(ChatList.routeName);
+      bool isSafe = await WebSocketService.login(Shared.currentUser);
+      if(isSafe)
+        Navigator.of(context).pushReplacementNamed(ChatList.routeName);
+      else{
+        Future.delayed(Duration(seconds: 3), () async {
+          await login();
+        });
+      }
     }
   }
 }

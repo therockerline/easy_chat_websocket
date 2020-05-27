@@ -55,7 +55,7 @@ class _RouteControllerState extends State<RouteController> {
         fit: StackFit.expand,
         children:[
           widget.child ?? Text(widget.routeName),
-          Positioned(
+          if(false)Positioned(
             bottom: 10,
             right: 10,
             child: StreamBuilder<List<User>>(

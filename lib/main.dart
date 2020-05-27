@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         Login.routeName: (context) => RouteController(child: Login(), routeName: Login.routeName,),
         ChatList.routeName: (context) => RouteController(child: ChatList(), routeName: ChatList.routeName,),
         Chat.routeName: (context) => RouteController(child: Chat(), routeName: Chat.routeName,),
-      },
+      }
     );
   }
 }
@@ -50,12 +50,20 @@ class _LoadingPageState extends State<LoadingPage> {
     print(['before run main',Shared.currentUser?.nickname]);
     String initRoute = ChatList.routeName;
     WebSocketService.init();
+    bool isSafe = true;
     if(Shared.currentUser == null){
       initRoute = Login.routeName;
     }else {
-      WebSocketService.login(Shared.currentUser);
+       isSafe = await WebSocketService.login(Shared.currentUser);
     }
-    Navigator.pushReplacementNamed(context, initRoute);
+    print(isSafe);
+    if(isSafe)
+      Navigator.pushReplacementNamed(context, initRoute);
+    else{
+      Future.delayed(Duration(seconds: 3), () async {
+        await initialize();
+      });
+    }
     print(['main',Shared.currentUser?.nickname, initRoute]);
   }
   @override

@@ -1,3 +1,4 @@
 class Constants{
-  static String userIdBox = 'userIdBox';
+  static String boxUserId = 'boxUserId';
+  static String boxMessagesSuffix = 'chatWith_';
 }

@@ -39,8 +39,9 @@ class _ChatListState extends State<ChatList> {
         initialData: [],
         stream: Shared.onlineUsers.stream,
         builder: (context, snapshot) {
-          if(snapshot.hasData)
-            users = snapshot.data;
+          if(snapshot.hasData) {
+            evaluateNewUsers(snapshot.data);
+          }
           return Padding(
               padding: const EdgeInsets.symmetric(vertical: 24.0),
               child: Column(
@@ -59,5 +60,14 @@ class _ChatListState extends State<ChatList> {
   void openChat(User user) {
     Shared.setTargetUser(user);
     Navigator.of(context).pushNamed(Chat.routeName);
+  }
+
+  void evaluateNewUsers(List<User> data) {
+    data.forEach((newUser) {
+      int indexOf = users.indexWhere((user) => user.nickname == newUser.nickname);
+      if(indexOf == -1){
+        users.add(newUser);
+      }
+    });
   }
 }
