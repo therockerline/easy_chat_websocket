@@ -4,8 +4,11 @@ import 'package:easychat/pages/login/login.dart';
 import 'package:easychat/services/route_service.dart';
 import 'package:easychat/services/session_service.dart';
 import 'package:easychat/services/shared.dart';
+import 'package:easychat/services/storage_service.dart';
 import 'package:easychat/services/web_socket_service.dart';
 import 'package:flutter/material.dart';
+
+import 'constants.dart';
 
 void main() async{
   runApp(MyApp());
@@ -48,23 +51,26 @@ class _LoadingPageState extends State<LoadingPage> {
   Future<void> initialize() async {
     await SessionService.init();
     print(['before run main',Shared.currentUser?.nickname]);
-    String initRoute = ChatList.routeName;
-    WebSocketService.init();
+    await WebSocketService.init();
     bool isSafe = true;
     if(Shared.currentUser == null){
-      initRoute = Login.routeName;
+      print('no usename');
+      String username = await Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+      await Storage(Constants.boxUserId).set(username);
+      await initialize();
+      return;
     }else {
        isSafe = await WebSocketService.login(Shared.currentUser);
     }
-    print(isSafe);
+    print(['isSafe',isSafe]);
     if(isSafe)
-      Navigator.pushReplacementNamed(context, initRoute);
+      Navigator.pushReplacementNamed(context, ChatList.routeName);
     else{
       Future.delayed(Duration(seconds: 3), () async {
         await initialize();
       });
     }
-    print(['main',Shared.currentUser?.nickname, initRoute]);
+    print(['main',Shared.currentUser?.nickname]);
   }
   @override
   void initState() {

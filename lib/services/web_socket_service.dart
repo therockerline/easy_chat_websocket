@@ -3,13 +3,15 @@ import 'dart:convert';
 import 'package:easychat/models/message.dart';
 import 'package:easychat/models/socket_message.dart';
 import 'package:easychat/models/user.dart';
+import 'package:easychat/services/session_service.dart';
 import 'package:easychat/services/shared.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:universal_platform/universal_platform.dart';
-import 'package:web_socket_channel/html.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketService{
+  static bool isConnected = false;
   static WebSocketChannel webSocketChannel;
   static StreamController<SocketMessage> _streamController = StreamController.broadcast();
   static List<User> _users;
@@ -27,12 +29,18 @@ class WebSocketService{
     });
     List<User> users = [];
     try {
-      if (UniversalPlatform.isWeb)
-        webSocketChannel = WebSocketChannel.connect(Uri.parse('ws://localhost:8080'));
-      else
-        webSocketChannel = IOWebSocketChannel.connect(Uri.parse('ws://192.168.1.98:8080'));
+      Uri server;
+      print(server);
+      if (UniversalPlatform.isWeb){
+        server = Uri.parse('ws://localhost:8080');
+        webSocketChannel = WebSocketChannel.connect(server);
+      }else{
+        server = Uri.parse('ws://10.0.2.2:8080');
+        webSocketChannel = IOWebSocketChannel.connect(server);
+      }
     }catch(error){
-      print(error);
+      print([error, webSocketChannel]);
+      _streamController.add(SocketMessage(type: SocketMessageTypes.login));
     }
     print(['activate listener', ]);
     webSocketChannel.stream.listen(
@@ -57,9 +65,19 @@ class WebSocketService{
               // TODO: Handle this case.
               break;
           }
-          users.removeWhere((element) => element.nickname == Shared.currentUser.nickname);
-          print(users.length);
-          Shared.onlineUsers.add(users);
+          if(Shared.currentUser!=null) {
+            try {
+              users.removeWhere((element) =>
+              element.nickname == Shared.currentUser?.nickname
+              );
+            }catch(e){
+              print('probably logged out');
+            }
+            print(['users', users.length]);
+            Shared.onlineUsers.add(users);
+          }else{
+            print('probably logged out');
+          }
         }else{
           print(['error',message]);
           _streamController.add(SocketMessage(type: SocketMessageTypes.login));
@@ -67,16 +85,17 @@ class WebSocketService{
       },
       onError: (error){
         print(['error socket',error]);
-        _streamController.add(SocketMessage(type: SocketMessageTypes.login));
+        isConnected = false;
       },
       onDone: (){
         print('done');
       }
     );
+    isConnected = true;
   }
 
   static Future<bool> login(User user) async {
-    if(user != null) {
+    if(user != null && isConnected) {
       var login = {
         'type': SocketMessageTypes.login.index,
         'user': user.toJson(),
@@ -84,8 +103,8 @@ class WebSocketService{
       var message = jsonEncode(login);
       print(['login', message]);
       webSocketChannel.sink.add(message);
-      SocketMessage event = await _streamController.stream.single;
-      print(event);
+      SocketMessage event = await _streamController.stream.first;
+      print(['event',event]);
       if (event?.type == SocketMessageTypes.received){
         if (event.responseForType == SocketMessageTypes.login) {
           return true;
@@ -95,27 +114,33 @@ class WebSocketService{
     return false;
   }
 
-  static Future<void> logout(User user) async {
+  static Future<void> logout() async {
+    User user = Shared.currentUser;
     if(user!= null){
       var login = {
         'type':SocketMessageTypes.logout.index,
-        'user':user.toJson(),
+        'user':user,
       };
       var message = jsonEncode(login);
-      print(['logout', message]);
+      print(['logout',SocketMessageTypes.logout, message]);
+      await _streamController.close();
       webSocketChannel.sink.add(message);
     }
     return;
   }
 
-  static void send(User user, String text) {
+  static void sendMessage(User target, String text) {
     var mess = {
       'type':SocketMessageTypes.message.index,
-      'target':user,
+      'target':target,
       'message':text
     };
+    _send(mess);
+  }
+
+  static void _send(Object mess) {
     String jsonEncoded = jsonEncode(mess);
-    print(['send', jsonEncoded]);
+    print(['send',jsonEncoded]);
     webSocketChannel.sink.add(jsonEncoded);
   }
 }

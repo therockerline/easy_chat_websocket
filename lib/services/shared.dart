@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:easychat/constants.dart';
 import 'package:easychat/models/message.dart';
@@ -7,8 +6,9 @@ import 'package:easychat/models/user.dart';
 import 'package:easychat/services/storage_service.dart';
 
 class Shared{
+  // ignore: close_sinks
   static StreamController onlineUsers = StreamController<List<User>>.broadcast();
-  static User targetUser = null;
+  static User targetUser;
   static User currentUser;
 
   static Future<void> setTargetUser(User user) async {
@@ -19,5 +19,9 @@ class Shared{
       });
     }
     targetUser = user;
+  }
+
+  static void closeStream(){
+    onlineUsers.sink.close();
   }
 }

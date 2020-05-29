@@ -35,7 +35,7 @@ class _ChatListItemState extends State<ChatListItem> {
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: CircleAvatar(
-                backgroundColor: Colors.green,
+                backgroundColor: widget.user.isOnline?Colors.green:Colors.red,
               ),
             ),
             Text(widget.user.nickname),

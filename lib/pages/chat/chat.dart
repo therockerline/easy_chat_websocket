@@ -1,12 +1,9 @@
 
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:easychat/constants.dart';
 import 'package:easychat/models/message.dart';
 import 'package:easychat/models/user.dart';
 import 'package:easychat/services/shared.dart';
-import 'package:easychat/services/storage_service.dart';
 import 'package:easychat/services/web_socket_service.dart';
 import 'package:flutter/material.dart';
 
@@ -22,13 +19,13 @@ class Chat extends StatefulWidget {
 class _ChatState extends State<Chat> {
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
-  StreamSubscription stream = null;
-  User user;
+  StreamSubscription stream;
+  User userTarget;
 
   @override
   void initState() {
-    user = Shared.targetUser;
-    stream = user.updater.stream.listen((event) {
+    userTarget = Shared.targetUser;
+    stream = userTarget.updater.stream.listen((event) {
       print(['update',_scrollController.offset, _scrollController.position.maxScrollExtent]);
       //_scrollController.animateTo(_scrollController.position.maxScrollExtent + 18, duration: Duration(milliseconds: 500), curve: Curves.bounceInOut);
       setState(() {});
@@ -38,29 +35,38 @@ class _ChatState extends State<Chat> {
 
   @override
   Widget build(BuildContext context) {
-    if(user==null){
+    if(userTarget==null){
       return CircularProgressIndicator();
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('${user.nickname}'),
+        title: Text('${userTarget.nickname}'),
       ),
       bottomSheet: Form(
         child: TextFormField(
           controller: _controller,
+          onEditingComplete: _sendMessage,
           decoration: InputDecoration(
-            icon: Column(
+            icon: Stack(
+              alignment: Alignment.center,
+              fit: StackFit.loose,
               children: [
                 Icon(Icons.person),
-                Text('${user.messages.length}')
+                Positioned(
+                    left: 25,
+                    child: Text('${userTarget.messages.length}')
+                )
               ],
             ),
-            labelText: 'Send a message to ${user.nickname}',
+            labelText: 'Send a message to ${userTarget.nickname}',
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _sendMessage,
+        child: Icon(
+          Icons.send
+        ),
       ),
       body: Container(
         height: MediaQuery.of(context).size.height - 200,
@@ -72,7 +78,7 @@ class _ChatState extends State<Chat> {
               reverse: true,
               controller: _scrollController,
               scrollDirection: Axis.vertical,
-              children: user.messages.map((e) {
+              children: userTarget.messages.map((e) {
                 return(
                    Text(e.message, style: TextStyle(color: e.type == MessageType.sended? Colors.green: Colors.red),)
                 );
@@ -85,11 +91,12 @@ class _ChatState extends State<Chat> {
   }
 
   void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
+    String message = _controller.text;
+    if (message.isNotEmpty) {
       setState(() {
-        user.addMessage(Message(message: _controller.text, type: MessageType.sended));
+        userTarget.addMessage(Message(message: message, type: MessageType.sended));
       });
-      WebSocketService.send(user, _controller.text);
+      WebSocketService.sendMessage(userTarget, message);
     }
   }
 

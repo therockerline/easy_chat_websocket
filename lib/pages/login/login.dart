@@ -19,7 +19,6 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   TextEditingController _controller = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -61,18 +60,9 @@ class _LoginState extends State<Login> {
     );
   }
 
-  Future<void> login() async {
+  void login() {
     if(_controller.text.isNotEmpty) {
-      await Storage(Constants.boxUserId).set(_controller.text);
-      await SessionService.init();
-      bool isSafe = await WebSocketService.login(Shared.currentUser);
-      if(isSafe)
-        Navigator.of(context).pushReplacementNamed(ChatList.routeName);
-      else{
-        Future.delayed(Duration(seconds: 3), () async {
-          await login();
-        });
-      }
+      Navigator.pop(context, _controller.text);
     }
   }
 }
